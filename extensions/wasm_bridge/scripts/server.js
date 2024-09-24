@@ -58,6 +58,7 @@ if (is_post_package) {
         fs.writeFileSync(process.env.YYtargetFile,final);
 
         console.log('Overwritten final zip file - pausing');
+        // uncomment the next line to save a copy of the games ZIP file to the current directory
         //fs.copyFileSync(process.env.YYtargetFile, path.join(__dirname,path.basename(process.env.YYtargetFile)));
         process.exit(0);
     })();
