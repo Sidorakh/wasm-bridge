@@ -4,7 +4,7 @@ const fs = require('fs');
 const JSZip = require('jszip'); // for modifying the output zip file
 // assume it's enabled - this script *is* running after all
 
-fs.writeFileSync(path.join(__dirname,'../','../','../','.env'),Object.entries(process.env).map(e=>`${e[0]}=${e[1]}`).join('\n'))
+//fs.writeFileSync(path.join(__dirname,'../','../','../','.env'),Object.entries(process.env).map(e=>`${e[0]}=${e[1]}`).join('\n'))
 
 
 let runner_path = path.join(process.env.YYoutputFolder,'runner','runner.html');
