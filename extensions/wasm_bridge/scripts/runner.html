@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>GXC Game</title>
+    <style>
+      @-webkit-keyframes rotation {
+        from {
+          -webkit-transform: rotate(0deg);
+        }
+
+        to {
+          -webkit-transform: rotate(360deg);
+        }
+      }
+
+      @-moz-keyframes rotation {
+        from {
+          -moz-transform: rotate(0deg);
+        }
+
+        to {
+          -moz-transform: rotate(360deg);
+        }
+      }
+
+      @-o-keyframes rotation {
+        from {
+          -o-transform: rotate(0deg);
+        }
+
+        to {
+          -o-transform: rotate(360deg);
+        }
+      }
+
+      @keyframes rotation {
+        from {
+          transform: rotate(0deg);
+        }
+
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      html {
+        background: #060612;
+      }
+
+      body {
+        font-family: arial;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        min-height: fill-available;
+        min-height: 100svh; /* Otherwise contents can be covered by an address bar in Safari on iOS 15 */
+        min-width: 100vw;
+        background: radial-gradient(
+          56.63% 56.63% at 50% 43.37%,
+          #1c1726 0%,
+          #060612 100%
+        );
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        place-items: center;
+      }
+
+      body.scrollingDisabled {
+        overflow: hidden;
+      }
+
+      .emscripten {
+        padding-right: 0;
+        display: block;
+      }
+
+      div.emscripten {
+        text-align: center;
+      }
+
+      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten {
+        display: none;
+        border: 0px none;
+        background-color: black;
+        position: relative;
+        transition: opacity 5s ease-in;
+        -webkit-transition: opacity 5s ease-in;
+        opacity: 0;
+        filter: blur(0) grayscale(0);
+        margin-top: auto;
+        margin-bottom: auto;
+        image-rendering: optimizeSpeed;             /* Older versions of FF          */
+        image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+        image-rendering: -webkit-optimize-contrast; /* Safari                        */
+        image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+        image-rendering: pixelated;                 /* Awesome future-browsers       */
+        -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+      }
+
+      canvas.active {
+        animation-name: fadeIn;
+        animation-duration: 2s;
+        opacity: 1;
+      }
+
+      canvas.paused {
+        animation-name: blur;
+        animation-duration: 0.5s;
+        filter: blur(2px) grayscale(1);
+      }
+
+      canvas.unpaused {
+        animation-name: none;
+      }
+
+      canvas.animatedSizeTransitions {
+        transition: width 0.3s ease, height 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes blur {
+        0% {
+          filter: blur(0) grayscale(0);
+        }
+
+        100% {
+          filter: blur(2px) grayscale(1);
+        }
+      }
+
+      .spinner {
+        height: 30px;
+        width: 30px;
+
+        -webkit-animation: rotation 0.8s linear infinite;
+        -moz-animation: rotation 0.8s linear infinite;
+        -o-animation: rotation 0.8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+
+        border: 5px solid #bdff00;
+        border-top: 5px solid #719900;
+        border-radius: 100%;
+      }
+
+      .floating-control {
+        position: absolute;
+        display: none;
+        border: none;
+
+        left: 0px;
+        top: 0px;
+        width: 400px;
+        height: 100%;
+        padding: 10px;
+
+        font-family: monospace;
+        font-size: 8;
+        color: white;
+        background: rgba(53, 18, 84, 0.8);
+        box-shadow: rgb(9 8 13 / 20%) -2px 2px 4px, rgb(9 8 13 / 40%) -4px 4px 16px;
+      }
+
+      #status {
+        display: inline-block;
+        vertical-align: top;
+        font-weight: bold;
+        color: white;
+      }
+
+      #progress {
+        width: 250px;
+        height: 10px;
+        -webkit-appearance: none;
+        appearance: none;
+        padding: 5px;
+      }
+
+      /* Determines the style of the background of the progress bar */
+      progress[value]::-webkit-progress-bar {
+        background-color: #8492a6;
+        height: 10px;
+        border-radius: 15px;
+      }
+      /* Determines the style of the completed part of the progress bar */
+      progress[value]::-webkit-progress-value {
+        background-image: -webkit-linear-gradient(left, #719900, #bdff00);
+        height: 10px;
+        border-radius: 15px;
+      }
+
+      div.loading {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+      }
+      div.loading > * {
+        padding: 10px;
+        margin: 10px;
+      }
+
+      .output-container {
+        text-align: center;
+        margin-top: auto;
+      }
+      .output-button {
+        border: none;
+        width: 200px;
+        height: 25px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: black;
+        color: #20c20e;
+        font-family: "Lucida Console", Monaco, monospace;
+      }
+
+      #output {
+        display: none;
+        height: 200px;
+        background-color: black;
+        color: white;
+        font-family: "Lucida Console", Monaco, monospace;
+        outline: none;
+        border: none;
+        padding: 0;
+        width: 100%;
+      }
+
+      #message-container {
+        display: none;
+        min-height: 50px;
+        background-color: rgba(20, 20, 20, 0.5);
+        outline: none;
+        border: none;
+        padding: 0;
+        width: 100%;
+        position: absolute;
+        top: 0;
+      }
+
+      #messages {
+        margin-left: 50px;
+        color: white;
+        font-family: "Lucida Console", Monaco, monospace;
+        outline: none;
+        border: none;
+        padding: 0;
+      }
+
+      img.qrCode {
+         opacity: 1.0;
+         width: 50%;
+         height: 50%;
+      }
+
+      #pauseMenuContainer {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      #pauseMenuContainer[hidden] {
+        display: none !important;
+        opacity: 0;
+      }
+
+      #pauseMenuBorder {
+        background: linear-gradient(135deg, #FA1E4E, transparent 40%);
+        padding: 1px;
+        border-radius: 4px;
+        clip-path: polygon(10.5px 0, 100% 0, 100% 100%, 0 100%, 0 10.5px);
+        width: 70vw;
+        max-width: 400px;
+      }
+
+      #pauseMenu {
+        display: flex;
+        flex-direction: column;
+        padding: 60px 30px 60px 30px;
+        background: linear-gradient(180deg, #2E273F 16.15%, rgba(46, 39, 63, 0.79) 56.25%, #2E273F 91.15%);
+        border-radius: 4px;
+        clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+        animation-name: fadeIn;
+        animation-duration: 0.5s;
+        opacity: 1;
+      }
+
+      #pauseMenu button {
+        font-weight: 500;
+        font-size: 17px;
+        color: white;
+        background: #FA1E4E;
+        border: 1px solid #FA1E4E;
+        border-radius: 6px;
+        padding: 12px 24px;
+        margin: 5px 0;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #pauseMenu button#quitButton {
+        background: #FA1E4E40;
+      }
+
+      #pauseMenu button:hover {
+        filter: brightness(1.15);
+      }
+
+      #pauseMenu button:active {
+        filter: brightness(0.85);
+      }
+
+      #pauseMenu button[hidden] {
+        display: none;
+      }
+
+      .graph .labels.x-labels {
+        background-color: white;
+        text-anchor: middle;
+      }
+
+      .graph .labels.y-labels {
+        text-anchor: end;
+      }
+
+      .graph {
+        font-family: Averta, -apple-system, "Segoe UI", system-ui, sans-serif;
+        font-feature-settings: "tnum", "lnum";
+        font-style: normal;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 21px;
+        text-decoration-line: none;
+        letter-spacing: 0.25px;
+        background-color: transparent;
+        fill: #ccc;
+      }
+
+      .graph .grid {
+        stroke: #ccc;
+        stroke-dasharray: 0;
+        stroke-width: 1;
+      }
+
+      .labels {
+        font-size: 4px;
+      }
+
+      .label-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 4px;
+      }
+
+      .peer0 {
+        fill: #fa1f4e;
+        stroke: #fa1f4e;
+      }
+      .peer1 {
+        fill: #a970ff;
+        stroke: #a970ff;
+      }
+      .peer2 {
+        fill: #4574ee;
+        stroke: #4574ee;
+      }
+      .peer3 {
+        fill: #c3ff6f;
+        stroke: #c3ff6f;
+      }
+
+      .peer {
+        stroke-width: 0;
+      }
+
+      .peer-frame-delay {
+        fill: none;
+        stroke-width: 1;
+      }
+
+      .acceptable-rollback-button {
+        border: none;
+        width: 50px;
+        height: 25px;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: black;
+        color: #20c20e;
+        font-family: "Lucida Console", Monaco, monospace;
+      }
+
+      .peer-acceptable-rollback {
+        fill: none;
+        stroke-width: 1;
+        opacity: 0.3;
+      }
+
+      .relay-rtt {
+        stroke-width: 2;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas
+      class="emscripten"
+      id="canvas"
+      oncontextmenu="event.preventDefault()"
+      tabindex="-1"
+    >
+    </canvas>
+    <div id="pauseMenuContainer" hidden>
+      <div id="pauseMenuBorder">
+        <div id="pauseMenu">
+          <button id="resumeButton" onclick="resume()">
+            Resume
+          </button>
+          <button id="quitButton" onclick="quitIfSupported()">
+            Quit
+          </button>
+        </div>
+        </div>
+    </div>
+    <div class="loading">
+      <div class="spinner" id="spinner"></div>
+      <div class="emscripten" id="status">Downloading...</div>
+
+      <progress value="0" max="100" id="progress" hidden="1"></progress>
+      <img id="QRCode" class="qrCode" src="runner.svg" alt="URL QR Code" hidden="1"></img>
+      <img id="QR2Code" class="qrCode" src="runnerLocal.svg" alt="URL QR2 Code" hidden="1"></img>
+    </div>
+
+    <div class="floating-control" id="multiplayer-stats-container">
+      <div class="multiplayer-stats-network" id="multiplayer-stats-network">
+        <svg version="1.2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="graph" aria-labelledby="title" role="img" viewbox="-20 -10 130 140">
+          <title id="title">Network stats</title>
+          <g class="grid x-grid" id="xGrid">
+            <line x1="0" y1="100" x2="100" y2="100"></line>
+
+            <line x1="12.25" y1="99" x2="12.25" y2="101"></line>
+            <line x1="25" y1="98" x2="25" y2="102"></line>
+            <line x1="37.5" y1="99" x2="37.5" y2="101"></line>
+            <line x1="50" y1="98" x2="50" y2="102"></line>
+            <line x1="62.5" y1="99" x2="62.5" y2="101"></line>
+            <line x1="75" y1="98" x2="75" y2="102"></line>
+            <line x1="87.5" y1="99" x2="87.5" y2="101"></line>
+            <line x1="100" y1="98" x2="100" y2="102"></line>
+          </g>
+          <g class="grid y-grid" id="yGrid">
+            <line x1="0" y1="0" x2="0" y2="100"></line>
+
+            <line x1="-2" y1="0" x2="2" y2="0"></line>
+            <line x1="-1" y1="12.5" x2="1" y2="12.50"></line>
+            <line x1="-2" y1="25" x2="2" y2="25"></line>
+            <line x1="-1" y1="37.5" x2="1" y2="37.5"></line>
+            <line x1="-2" y1="50" x2="2" y2="50"></line>
+            <line x1="-1" y1="62.5" x2="1" y2="62.5"></line>
+            <line x1="-2" y1="75" x2="2" y2="75"></line>
+            <line x1="-1" y1="87.5" x2="1" y2="87.5"></line>
+          </g>
+          <g class="labels x-labels">
+            <text x="0" y="110">-8</text>
+            <text x="25" y="110">-4</text>
+            <text x="50" y="110">0</text>
+            <text x="75" y="110">4</text>
+            <text x="100" y="110">8</text>
+            <text x="50" y="115" class="label-title">Time shift</text>
+          </g>
+          <g class="labels y-labels">
+            <text x="-4" y="0" alignment-baseline="middle">16</text>
+            <text x="-4" y="25" alignment-baseline="middle">12</text>
+            <text x="-4" y="50" alignment-baseline="middle">8</text>
+            <text x="-4" y="75" alignment-baseline="middle">4</text>
+            <text x="-4" y="100" alignment-baseline="middle">0</text>
+            <text x="-10" y="50" class="label-title" alignment-baseline="middle">RTT</text>
+          </g>
+
+          <g id="stats-network-peers">
+          </g>
+
+          <g id="stats-network-peer-frame-delays">
+          </g>
+
+          <g id="stats-network-relay-rtt">
+          </g>
+        </svg>
+      </div>
+      <div>
+        <b>Acceptable rollback frames marker:</b>
+        <div>
+          <button class="acceptable-rollback-button" onclick="set_acceptable_rollback(0)">Off</button>
+          <button class="acceptable-rollback-button" onclick="set_acceptable_rollback(1)">+1</button>
+          <button class="acceptable-rollback-button" onclick="set_acceptable_rollback(2)">+2</button>
+          <button class="acceptable-rollback-button" onclick="set_acceptable_rollback(4)">+4</button>
+        </div>
+      </div>
+      <div id="multiplayer-stats">
+        [no stats available]
+      </div>
+    </div>
+    <div class="output-container" id="output-container" >
+      <button class="output-button" onclick="toggleConsole()">
+        Toggle Console
+      </button>
+      <button id="QRButton" class="output-button" onclick="toggleQRCode()">
+        Show QRCode
+      </button>
+      <button id="QR2Button" class="output-button" onclick="toggleQRCode2()">
+        Show Opera GX QRCode
+      </button>
+      <!--
+      <button id="webglbutton" class="output-button" onclick="toggleWebGLContext()">
+        Lose WebGL Context
+      </button>
+      -->
+      <button class="output-button" id="stats-button" style="visibility: hidden" onclick="toggleElement('multiplayer-stats-container')">
+        Toggle Stats
+      </button>
+      <button class="output-button" id="share-button" style="visibility: hidden" onclick="navigator.clipboard.writeText(window.shareUrl)">
+        Copy Share Url
+      </button>
+      <button class="output-button" id="log-state-button" onclick="log_next_game_state()" style="visibility: hidden">
+        Log State
+      </button>
+      <textarea id="output" rows="8"></textarea>
+    </div>
+
+    <div class="wallpaper-container" id="wallpaper-container" style="display: none">
+      <button class="output-button" onclick="toggleElement('wallpaper-config-iframe')">
+        Toggle configurator
+      </button>
+    </div>
+    <!-- The wallpaper config is displayed in an iframe to make it possible to use keyboard for entering values (it's consumed by
+        the runner in the original document). -->
+    <iframe class="floating-control" id="wallpaper-config-iframe" src="about:blank"></iframe>
+
+    <div id="message-container">
+      <div id="messages">
+      </div>
+    </div>
+
+   <script async
+     data-ad-client="ca-pub-123"
+     data-ad-frequency-hint="30s"
+     data-adbreak-test="on"
+     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js">
+   </script>
+
+   <script>
+     window.adsbygoogle = window.adsbygoogle || [];
+     const adBreak =  adConfig = function(o) {adsbygoogle.push(o);}
+   </script>
+
+    <script id="tick-worker" type="javascript/worker">
+      let running = false;
+      let stop_called = false;
+
+      let intervalMs = 16;
+
+      onmessage = (e) => {
+        if (e.data.run) {
+          intervalMs = Math.floor(1000 / e.data.fps);
+
+          if (!running) {
+            running = true;
+            setTimeout(tick, intervalMs);
+          }
+        } else {
+          stop_called = true;
+        }
+      }
+
+      const tick = () => {
+        if (stop_called) {
+          stop_called = false;
+          running = false;
+
+          return;
+        }
+
+        const start = new Date().getTime();
+        postMessage('');
+        const end = new Date().getTime();
+
+        let next_update = start + intervalMs - end;
+        next_update = Math.max(next_update, 0);
+        setTimeout(tick, next_update);
+      }
+    </script>
+
+    <script type="text/javascript">
+      const blob = new Blob([document.querySelector('#tick-worker').textContent]);
+      const worker = new Worker(window.URL.createObjectURL(blob));
+
+      worker.onmessage = function () {
+        GM_tick(performance.now());
+      }
+
+      const isMultiplayer = function () {
+        if (typeof GM_is_multiplayer !== 'function') {
+          return false;
+        }
+
+        return GM_is_multiplayer() !== 0;
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (!isMultiplayer()) {
+          return;
+        }
+
+        if (document.visibilityState === 'hidden') {
+          worker.postMessage({run: true, fps: 60});
+        } else {
+          worker.postMessage({run: false});
+        }
+      });
+    </script>
+
+    <script type="text/javascript">
+      const CHANGE_ASPECT_RATIO = true;
+
+      var bodyElement = document.getElementsByTagName("body")[0];
+      var statusElement = document.getElementById("status");
+      var progressElement = document.getElementById("progress");
+      var spinnerElement = document.getElementById("spinner");
+      var canvasElement = document.getElementById("canvas");
+      var outputElement = document.getElementById("output");
+      var outputContainerElement = document.getElementById("output-container");
+      var qrElement = document.getElementById("QRCode");
+      var qr2Element = document.getElementById("QR2Code");
+      var qrButton = document.getElementById("QRButton");
+      var qr2Button = document.getElementById("QR2Button");
+      var pauseMenu = document.getElementById("pauseMenuContainer");
+      var resumeButton = document.getElementById("resumeButton");
+      var quitButton = document.getElementById("quitButton");
+
+      const messageContainerElement = document.getElementById("message-container");
+      const messagesElement = document.getElementById("messages");
+      let rollbackMessages = [];
+
+      let clearRollbackMessagesTimeoutId = -1;
+      const showRollbackMessage = function (message) {
+        let messages = "";
+        rollbackMessages.push(message);
+        rollbackMessages.forEach(m => messages += "<p>" + m + "</p>");
+
+        messagesElement.innerHTML = messages;
+        messageContainerElement.style.display = 'block';
+
+        if (clearRollbackMessagesTimeoutId === -1) {
+          clearTimeout(clearRollbackMessagesTimeoutId);
+        }
+        clearRollbackMessagesTimeoutId = setTimeout(clearRollbackMessages, 5000);
+      };
+
+      const clearRollbackMessages = function () {
+        clearRollbackMessagesTimeoutId = -1;
+        rollbackMessages = [];
+        messageContainerElement.style.display = 'none';
+      };
+
+      var startingHeight, startingWidth;
+      var startingAspect;
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function () {
+          var element = document.getElementById("output");
+          if (element) element.value = ""; // clear browser cache
+          return function (text) {
+            if (arguments.length > 1)
+              text = Array.prototype.slice.call(arguments).join(" ");
+            // These replacements are necessary if you render to raw HTML
+            //text = text.replace(/&/g, "&amp;");
+            //text = text.replace(/</g, "&lt;");
+            //text = text.replace(/>/g, "&gt;");
+            //text = text.replace('\n', '<br>', 'g');
+            console.log(text);
+            if (text === "Entering main loop.") {
+              // It seems that this text ensures game is loaded.
+              ensureAspectRatio();
+            }
+            if (element) {
+              element.value += text + "\n";
+              element.scrollTop = element.scrollHeight; // focus on bottom
+            }
+          };
+        })(),
+        printErr: function (text) {
+          if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(" ");
+          console.error(text);
+        },
+        canvas: (function () {
+          var canvas = document.getElementById("canvas");
+
+          return canvas;
+        })(),
+        setStatus: function (text) {
+          if (!Module.setStatus.last)
+            Module.setStatus.last = { time: Date.now(), text: "" };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          if (m) {
+            text = m[1];
+            progressElement.value = parseInt(m[2]) * 100;
+            progressElement.max = parseInt(m[4]) * 100;
+            progressElement.hidden = false;
+            spinnerElement.hidden = false;
+          } else {
+            progressElement.value = null;
+            progressElement.max = null;
+            progressElement.hidden = true;
+
+            // If there are no status text, we are finished and can display
+            // the canvas and hide the spinner
+            if (!text) {
+              spinnerElement.style.display = "none";
+              canvasElement.style.display = "block";
+            }
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function (left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(
+            left
+              ? "Preparing... (" +
+                  (this.totalDependencies - left) +
+                  "/" +
+                  this.totalDependencies +
+                  ")"
+              : "All downloads complete."
+          );
+        },
+      };
+      Module.setStatus("Downloading...");
+      window.onerror = function (event) {
+        // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+        Module.setStatus("Exception thrown, see JavaScript console");
+        spinnerElement.style.display = "none";
+        Module.setStatus = function (text) {
+          if (text) Module.printErr("[post-exception status] " + text);
+        };
+      };
+
+      // Route URL GET parameters to argc+argv
+      if (typeof window === "object") {
+        Module['arguments'] = window.location.search.substr(1).trim().split('&');
+        // If no args were passed arguments = [''], in which case kill the single empty string.
+        if (!Module['arguments'][0]) {
+          Module['arguments'] = [];
+        }
+      }
+
+      function toggleConsole() {
+        var isShown = outputElement.style.display === "flex";
+        if (isShown) {
+          outputElement.style.display = "none";
+          outputElement.scrollIntoView(false);
+        } else {
+          outputElement.style.display = "flex";
+          outputElement.scrollIntoView(true);
+        }
+      }
+
+      function toggleQRCode() {
+        var isShown = !qrElement.hidden;
+        if (isShown) {
+          qrElement.hidden = true;
+          qrButton.innerHTML = "Show QRCode";
+        } else {
+          qrElement.hidden = false;
+          qrButton.innerHTML = "Hide QRCode";
+        }
+      }
+
+      function toggleQRCode2() {
+        var isShown = !qr2Element.hidden;
+        if (isShown) {
+          qr2Element.hidden = true;
+          qr2Button.innerHTML = "Show Opera GX QRCode";
+        } else {
+          qr2Element.hidden = false;
+          qr2Button.innerHTML = "Hide Opera GX QRCode";
+        }
+      }
+
+      /*
+      var g_extLostContext = null;
+
+      function toggleWebGLContext() {
+        if (g_extLostContext == null) {
+          var canvas = document.getElementById('canvas');
+          var gl = canvas.getContext('webgl2');
+          g_extLostContext = gl.getExtension('WEBGL_lose_context');
+        } // end if
+        var button = document.getElementById("webglbutton");
+        var text = button.textContent || button.innerText;
+        if (text.trim() == "Lose WebGL Context") {
+          g_extLostContext.loseContext();
+          button.textContent = "Restore WebGL Context";
+        } // end if
+        else {
+          g_extLostContext.restoreContext();
+          button.textContent = "Lose WebGL Context";
+          g_extLostContext = null;
+        } // end else
+      }
+      */
+      function toggleElement(id) {
+        var elem = document.getElementById(id);
+        if (elem) {
+          elem.style.display = elem.style.display == 'block' ? 'none' : 'block';
+        }
+      }
+
+      var g_pWadLoadCallback = undefined;
+      function setWadLoadCallback( _wadLoadCallback ) 
+      {
+        g_pWadLoadCallback = _wadLoadCallback;
+      }
+
+      var g_pAddAsyncMethod = -1;
+
+      function setAddAsyncMethod( asyncMethod )
+      {
+        g_pAddAsyncMethod = asyncMethod;
+      }
+
+      var g_pJSExceptionHandler = undefined;
+
+      function setJSExceptionHandler( exceptionHandler )
+      {
+        if (typeof exceptionHandler == "function") {
+            g_pJSExceptionHandler = exceptionHandler;
+        } // end if
+      } // end setJSExceptionHandler
+
+      function hasJSExceptionHandler()
+      {
+        return (g_pJSExceptionHandler != undefined) && (typeof g_pJSExceptionHandler == "function");
+      } // end hasJSExceptionHandler
+
+      function doJSExceptionHandler( exceptionJSON )
+      {
+        if (typeof g_pJSExceptionHandler == "function") {
+          var exception = JSON.parse( exceptionJSON );
+          g_pJSExceptionHandler( exception );
+        } // end if
+      } // end doJSExceptionHandler
+
+      function manifestFiles()
+      {
+        return [ "runner.data",
+"runner.js",
+"runner.wasm",
+"audio-worklet.js",
+"game.unx" ].join( ";");
+      }
+
+      function manifestFilesMD5()
+      {
+        return [ "1d09f5f0cb14bd46cfba7343c0e05886",
+"db5d7a12d2cd866bf536f8ce8c8ffb94",
+"591f58ecebef9006336731fff76594fb",
+"e8f1e8db8cf996f8715a6f2164c2e44e",
+"737e5b7c96ef05b21835616e0213d9d5" ];
+      }
+
+      function onFirstFrameRendered()
+      {
+          //console.log("First frame rendered!");
+      }
+
+      function onGameSetWindowSize(width,height)
+      {
+          console.log("Window size set to width: " + width + ", height: " + height);
+
+          startingHeight = height;
+          startingWidth = width;
+          startingAspect = startingWidth / startingHeight;
+      }
+
+    function triggerAd(adId, _callback_beforeAd, _callback_afterAd, _callback_adDismissed, _callback_adViewed, _callback_adbreakDone) {
+       // need to take a copy of the RValues represented
+       var pRValueCopy = triggerAdPrefix( _callback_beforeAd, _callback_afterAd, _callback_adDismissed, _callback_adViewed, _callback_adbreakDone );
+       var pCallbackBeforeAd = pRValueCopy + (0*16);
+       var pCallbackAfterAd = pRValueCopy + (1*16);
+       var pCallbackAdDismissed = pRValueCopy + (2*16);
+       var pCallbackAdViewed = pRValueCopy + (3*16);
+       var pCallbackAdBreakDone = pRValueCopy + (4*16);
+
+       adBreak({
+         "type": "reward",                    // The type of this placement
+         "name": adId,                        // A descriptive name for this placement
+
+         "beforeAd": () => {                  // Prepare for the ad. Mute and pause the game flow
+           console.log("beforeAd");
+           // trigger _callback_beforeAd to game
+           doGMLCallback( pCallbackBeforeAd, { id:adId } );
+         },
+         "afterAd" : () => {                   // Resume the game and re-enable sound
+           console.log("afterAd");
+           // trigger _callback_afterAd to game
+           doGMLCallback( pCallbackAfterAd, { id:adId } );
+         },
+         "beforeReward": (showAdFn) => {      // Show reward prompt (call showAdFn() if clicked)
+           console.log("beforeReward");
+           showAdFn();
+           // Setup native prompt to indicate ad will load
+           // Will not be setup by dev so this UX controlled by GXC
+         },
+         "adDismissed": () => {               // Player dismissed the ad before it finished
+           console.log("adDismissed");
+           // trigger _callback_adDismissed to game
+           doGMLCallback( pCallbackAdDismissed, { id:adId } );
+         },
+         "adViewed": () => {                  // Player watched the ad–give them the reward.
+           console.log("adViewed");
+           // trigger _callback_adViewed to game
+           doGMLCallback( pCallbackAdViewed, { id:adId } );
+         },
+         "adBreakDone": (placementInfo) => {  // Always called (if provided) even if an ad didn't show
+           console.log("adBreakDone");
+           // trigger _callback_adBreakDone to game
+           doGMLCallback( pCallbackAdBreakDone, { id:adId } );
+           triggerAdPostfix( pRValueCopy );
+         }, 
+       });
+      }
+
+      function triggerPayment(itemId, _callback_PaymentComplete) {
+        var pRValueCopy = triggerPaymentPrefix(_callback_PaymentComplete);
+        setTimeout(() => {
+          console.log("triggerPayment");
+          doGMLCallback(pRValueCopy, { id:itemId });        
+        }, 1000);
+        triggerPaymentPostfix();
+      }
+
+      function ensureAspectRatio() {
+        if (canvasElement === undefined) {
+          return;
+        }
+
+        if (!CHANGE_ASPECT_RATIO) {
+          return;
+        }
+        
+        if (startingHeight === undefined && startingWidth === undefined) {
+          return;
+        }
+
+        canvasElement.classList.add("active");
+
+        const maxWidth = window.innerWidth;
+        const maxHeight = window.innerHeight;
+        var newHeight, newWidth;
+
+        // Find the limiting dimension.
+        var heightQuotient = startingHeight / maxHeight;
+        var widthQuotient = startingWidth / maxWidth;
+
+        if (heightQuotient > widthQuotient) {
+          // Max out on height.
+          newHeight = maxHeight;
+          newWidth = newHeight * startingAspect;
+        } else {
+          // Max out on width.
+          newWidth = maxWidth;
+          newHeight = newWidth / startingAspect;
+        }
+
+        canvasElement.style.height = newHeight + "px";
+        canvasElement.style.width = newWidth + "px";
+      }
+
+      function pause() { // Don't change the name - GX Mobile calls it when the app becomes inactive.
+        if (!canvasElement.classList.contains("active")) { // Wait for the canvas to load.
+          return
+        }
+        
+        GM_pause();
+        pauseMenu.hidden = false;
+        canvasElement.classList.add("paused");
+      }
+
+      function resume() {
+        GM_unpause();
+        pauseMenu.hidden = true;
+        canvasElement.classList.remove("paused");
+        canvasElement.classList.add("unpaused");
+        enterFullscreenIfSupported();
+        lockOrientationIfSupported();
+      }
+
+      function quitIfSupported() {
+        if (window.oprt && window.oprt.closeTab) { /* GX Mobile API */
+          window.oprt.closeTab();
+        } else if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
+          window.chrome.runtime.sendMessage('mpojjmidmnpcpopbebmecmjdkdbgdeke', { command: 'closeTab' })
+        }
+      }
+
+      function enterFullscreenIfSupported() {
+        if (!window.oprt || !window.oprt.enterFullscreen) { /* GX Mobile API */
+          return;
+        }
+
+        window.oprt.enterFullscreen();
+        let viewStatus = GM_get_view_status();
+        viewStatus.fullscreen = true;
+        GM_set_view_status(viewStatus);
+      }
+
+      function lockOrientationIfSupported() {
+        if (!window.oprt || !window.oprt.lockPortraitOrientation || !window.oprt.lockLandscapeOrientation) { /* GX Mobile API */
+          return;
+        }
+
+        let viewStatus = GM_get_view_status();
+        if (viewStatus.landscape === true && viewStatus.portrait === false) {
+          window.oprt.lockPortraitOrientation();
+        } else if (viewStatus.landscape === false && viewStatus.portrait === true) {
+          window.oprt.lockPortraitOrientation();
+        }
+      }
+
+      /* Observe the dimensions of body and ensureAspectRatio of the canvas (whilst taking up maximum space)
+       *
+       * NOTE(robertz):
+       *  We also need to request an Animation Frame to do this, if we do not, resizeObserver might throw error
+       *  "ResizeObserver loop limit exceeded", which means that
+       *  "[...] ResizeObserver was not able to deliver all observations within a single animation frame"
+       *  https://stackoverflow.com/a/50387233 (source).
+       *
+       *  There are different ways to solve the issue, since the error is benign (meaning it wont crash anything)
+       *  we could choose to ignore it via changing the window.onerror method, i.e
+       *  ```
+       *  window.onerror((event)=> {
+       *    if(event==="ResizeObserver loop limit exceeded") {
+       *       return
+       *    }
+       *     ///...rest
+       *  }
+       *  ```
+       *  But for now we request an animationFrame which seems to be the recommended way to go about it.
+       *
+       * NOTE(ddrechny):
+       *  window.innerWidth/Height value updates are sometimes delayed in WebKit on iOS after an orientation
+       *  change. Hence we're calling ensureAspectRatio one more time after a delay to minimize the risk of
+       *  sizing the canvas with outdated values.
+       */
+      const resizeObserver = new ResizeObserver(() => {
+        window.requestAnimationFrame(ensureAspectRatio);
+        setTimeout(() => window.requestAnimationFrame(ensureAspectRatio), 100);
+      });
+      resizeObserver.observe(document.body);
+
+      /* NOTE(ddrechny):
+       *  Body needs to be scrollable on desktop browsers for debug buttons to be accessible.
+       *  On mobile browsers scrolling can be activated accidentally and debug buttons aren't useful,
+       *  so it's better to disable it.
+       */
+      if (/Android|iPhone|iPod/i.test(navigator.userAgent)) {
+        bodyElement.className = "scrollingDisabled";
+        canvasElement.classList.add("animatedSizeTransitions");
+        outputContainerElement.hidden = true;
+      }
+
+      document.addEventListener("visibilitychange", (event) => {
+        if (document.visibilityState != "visible") {
+          pause();
+        } else if (isMultiplayer()) {
+          resume();
+        }
+      });
+
+      window.addEventListener("load", (event) => {
+        if ((!window.oprt || !window.oprt.enterFullscreen) && (!window.chrome || !window.chrome.runtime || !window.chrome.runtime.sendMessage)) {
+          quitButton.hidden = true;
+        }
+      });
+
+      setWadLoadCallback(() => {
+        enterFullscreenIfSupported();
+        lockOrientationIfSupported();
+      });
+
+      var read_ptr = 0;
+      read_int = () => {
+        var heap_slice = Module["HEAPU8"].subarray(read_ptr, read_ptr + 4);
+        var buffer = new ArrayBuffer(4);
+        var barray = new Uint8Array(buffer);
+        for (var i = 0; i < 4; i++) barray[i] = heap_slice[i];
+        var int_array = new Int32Array(buffer);
+        var int = int_array[0];
+        read_ptr += 4;
+        return int;
+      };
+
+      read_pointer = () => {
+        var ptr = Module.getValue(read_ptr, "*");
+        read_ptr += 8;
+        return ptr;
+      };
+
+      readPeer = () => {
+        var peer = {
+          peer: read_int(),
+          local_frames_ahead: read_int(),
+          rtt: read_int(),
+          remote_frame_rate: read_int(),
+          remote_frame_delay: read_int(),
+        }
+
+        return peer;
+      }
+
+      readStats = (s) => {
+        read_ptr = s;
+
+        var stats = {
+          kbps_sent: read_int(),
+          kbps_received: read_int(),
+          pps_sent: read_int(),
+          pps_received: read_int(),
+          frame_rate: read_int(),
+          rollbacks: read_int(),
+          frame_delay: read_int(),
+          skipped_frames: read_int(),
+          rejected_inputs: read_int(),
+          relay_rtt: read_int(),
+          peer: read_int(),
+          num_peers: read_int(),
+
+          serialization_stats: {
+            state_size: read_int(),
+            managed_instances_num: read_int()
+          },
+          peers: []
+        }
+
+        read_ptr = read_pointer();
+        for (var j = 0; j < stats.num_peers; ++j) {
+          stats.peers.push(readPeer());
+        }
+
+        return stats;
+
+      }
+
+      var acceptable_rollback_frames = 0;
+      var set_acceptable_rollback = (frames) => {
+        acceptable_rollback_frames = frames;
+      }
+
+      drawLocal = (peers_elem, frame_delay_elem, relay_rtt_elem, peer_name, relay_rtt, frame_delay) => {
+          drawPeer(peers_elem, frame_delay_elem, peer_name, 0, frame_delay, 0);
+
+          const per_pixel = 100/16;
+          const frames_rtt = relay_rtt/16; // To ceil, or not to ceil - that's the question.
+
+          const y = 100 - frames_rtt * per_pixel;
+
+          const relay_rtt_marker = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          relay_rtt_marker.setAttribute('x1', -2);
+          relay_rtt_marker.setAttribute('y1', y);
+          relay_rtt_marker.setAttribute('x2', 2);
+          relay_rtt_marker.setAttribute('y2', y);
+
+          relay_rtt_marker.setAttribute('data-relay-rtt', relay_rtt);
+
+          relay_rtt_marker.classList.add(peer_name);
+          relay_rtt_marker.classList.add('relay-rtt');
+
+          relay_rtt_elem.appendChild(relay_rtt_marker);
+      }
+
+      drawPeer = (peers_elem, frame_delay_elem, peer_name, rtt, frame_delay, frames_ahead) => {
+        const per_pixel = 100/16;
+        const frames_rtt = rtt/16; // To ceil, or not to ceil - that's the question.
+        const x = 50 + frames_ahead * per_pixel;
+        const y = 100 - frames_rtt * per_pixel;
+
+        const peer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        peer.setAttribute('cx', x);
+        peer.setAttribute('cy', y);
+        peer.setAttribute('r', 1);
+
+        peer.setAttribute('data-rtt', rtt);
+        peer.setAttribute('data-frame-delay', frame_delay);
+        peer.setAttribute('data-frames-ahead', frames_ahead);
+
+        peer.classList.add(peer_name);
+        peer.classList.add('peer');
+
+        peers_elem.appendChild(peer);
+
+        const peer_frame_delay = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        peer_frame_delay.setAttribute('cx', x);
+        peer_frame_delay.setAttribute('cy', y);
+        peer_frame_delay.setAttribute('r', frame_delay * per_pixel);
+
+        peer_frame_delay.classList.add(peer_name);
+        peer_frame_delay.classList.add('peer-frame-delay');
+
+        frame_delay_elem.appendChild(peer_frame_delay);
+
+        if (acceptable_rollback_frames > 0) {
+          const peer_acceptable_rollback = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          peer_acceptable_rollback.setAttribute('cx', x);
+          peer_acceptable_rollback.setAttribute('cy', y);
+          peer_acceptable_rollback.setAttribute('r', (frame_delay + acceptable_rollback_frames) * per_pixel);
+
+          peer_acceptable_rollback.classList.add(peer_name);
+          peer_acceptable_rollback.classList.add('peer-acceptable-rollback');
+          frame_delay_elem.appendChild(peer_acceptable_rollback);
+        }
+      }
+
+      report_stats = (stats_data) => {
+
+        var stats = readStats(stats_data);
+
+        var peers_elem = document.getElementById("stats-network-peers");
+        var frame_delay_elem = document.getElementById("stats-network-peer-frame-delays");
+        var relay_rtt_elem = document.getElementById("stats-network-relay-rtt");
+
+        peers_elem.innerHTML = '';
+        frame_delay_elem.innerHTML = '';
+        relay_rtt_elem.innerHTML = '';
+
+        stats.peers.forEach(p => {
+          drawPeer(peers_elem, frame_delay_elem, 'peer' + p.peer, p.rtt, p.remote_frame_delay, p.local_frames_ahead);
+        });
+
+        drawLocal(peers_elem, frame_delay_elem, relay_rtt_elem, 'peer' + stats.peer, stats.relay_rtt, stats.frame_delay);
+      }
+
+      let wallpaperConfig = {};
+      const wallpaperConfigKey = 'wallpaper-config';
+
+      function wallpaper_init_config_controls(definitions) {
+        const wallpaperContainer = document.getElementById("wallpaper-container");
+        wallpaperContainer.style.display = "block";
+
+        let configStyle = '<style type="text/css">' +
+          'body { color: white; font-family: Averta, -apple-system, "Segoe UI", system-ui, sans-serif; font-style: normal; font-size: 10px; }' +
+          '.config-row { display: flex; justify-content: flex-start; align-items: center; padding: .5em; }' +
+          '.config-row > label { flex: 1 }' +
+          '.config-row > input { flex: initial; }' +
+          '.config-row > textarea { flex: 1; }' +
+          '.config-row-label { font-size: 12px; font-weight: 600; }' +
+          'button { padding: 8px 16px; border-radius: 4px; background-color: unset; border-color: rgb(199, 159, 234); color: rgb(199, 159, 234); }' +
+          '</style>';
+        let configHTML = '<html><head><title></title>' + configStyle + '</head><body>' +
+          '<div class="wallpaper-header"><h1>Live Wallpaper Configurator</h1><button id="wallpaper-reset-parameters">Reset parameters</button></div>' +
+          '<div class="wallpaper-config" id="wallpaper-config"></div>' +
+          '</body></html>'
+
+        const wallpaperConfigDocument = document.getElementById("wallpaper-config-iframe").contentDocument;
+        wallpaperConfigDocument.open();
+        wallpaperConfigDocument.write(configHTML);
+        wallpaperConfigDocument.close();
+
+        const storedConfig = JSON.parse(localStorage.getItem(wallpaperConfigKey));
+        if (storedConfig) {
+          wallpaperConfig = storedConfig;
+        }
+
+        const configElement = wallpaperConfigDocument.getElementById("wallpaper-config");
+        const resetButton = wallpaperConfigDocument.getElementById("wallpaper-reset-parameters");
+        resetButton.addEventListener("click", (e) => {
+          wallpaper_reset_config();
+          wallpaperConfig = {};
+          add_config_elems(configElement, definitions);
+          notify_config_change();
+        }, false);
+
+        add_config_elems(configElement, definitions);
+        notify_config_change();
+      }
+
+      function add_config_elems(configElement, definitions) {
+        while (configElement.hasChildNodes()) {
+          configElement.removeChild(configElement.lastChild);
+        }
+
+        definitions.value
+          .map(d => create_elems(d, wallpaperConfig, ""))
+          .filter(e => e !== null && e !== undefined)
+          .map(e => configElement.appendChild(e));
+      }
+
+      function create_elems(definition, config, prefixId) {
+          if (definition.type === undefined || definition.name === undefined) {
+            console.log("missing definition name or type for: ", definition);
+            return null;
+          }
+
+          if  (definition.type === "section") {
+            return create_section_elem(definition, config, prefixId);
+          }
+
+
+          if (definition.value === undefined ) {
+            console.log("missing definition value for: ", definition);
+            return null;
+          }
+
+          if (definition.type === "range") {
+            return create_range_elem(definition, config, prefixId);
+          }
+
+          if (definition.type === "boolean") {
+            return create_checkbox_elem(definition, config, prefixId);
+          }
+
+          if (definition.type === "color" || definition.type === "colour") {
+            return create_color_elem(definition, config, prefixId);
+          }
+
+          if (definition.type === "string") {
+            return create_text_elem(definition, config, prefixId);
+          }
+
+          if (definition.type === "string_multiline") {
+            return create_multiline_text_elem(definition, config, prefixId);
+          }
+
+          if (definition.type === "select") {
+            return create_select_elem(definition, config, prefixId);
+          }
+
+          if (definition.type === "file" || definition.type === "folder") {
+            return create_not_supported_elem(definition, config);
+          }
+          
+          console.log("missing config value for: ", definition);
+          return null;
+      }
+
+      function create_section_elem(definition, config, prefixId) {
+        const divElem = document.createElement("div");
+
+        const headerElem = document.createElement("h2");
+        headerElem.innerHTML = definition.label;
+
+        divElem.appendChild(headerElem);
+
+        const sectionId = prefixId + definition.name + "-"
+        if (!config[definition.name]) {
+          config[definition.name] = {};
+        }
+
+        definition.children
+          .map(c => create_elems(c, config[definition.name], sectionId))
+          .filter(e => e !== null && e !== undefined)
+          .map(e => divElem.appendChild(e));
+
+        return divElem;
+      }
+
+      function get_initial_value(definition, config) {
+        let value =  definition.value;
+        const configValue = config[definition.name];
+        if (configValue && (typeof(configValue) === typeof(value))) {
+          value = configValue;
+        }
+
+        return value;
+      }
+
+      function wrap_with_label(inputElem, definition, prefixId) {
+        const controlElem = document.createElement("div");
+        controlElem.classList.add(definition.name + "-control");
+        controlElem.classList.add("config-row");
+
+        const labelElem = document.createElement("label");
+        labelElem.htmlFor = prefixId + definition.name;
+        labelElem.innerHTML = "<span class='config-row-label'>" + (definition.label || definition.name) + "</span>";
+        if (definition.description) {
+          labelElem.innerHTML += "<p>" + definition.description + "</p>";
+        }
+        controlElem.appendChild(labelElem);
+
+        inputElem.id = prefixId + definition.name;
+        controlElem.appendChild(inputElem);
+
+        return controlElem;
+      }
+
+      function create_range_elem(definition, config, prefixId) {
+        const value = get_initial_value(definition, config);
+
+        const valueElem = document.createElement("span");
+        valueElem.style = "margin: 0.5em";
+        valueElem.innerHTML = "(" + value + ")";
+
+        const stepElem = document.createElement("input");
+        stepElem.id = prefixId + definition.name;
+        stepElem.type = "range";
+        stepElem.min = definition.min || 0;
+        stepElem.max = definition.max || 100;
+        stepElem.step = definition.step || 1;
+        stepElem.value = value;
+
+        config[definition.name] = value;
+        function range_value_updated(e) {
+          const valueUpdate = Number(e.target.value);
+          config[definition.name] = valueUpdate;
+          valueElem.innerHTML = "(" + valueUpdate + ")";
+
+          notify_config_change();
+        }
+
+        stepElem.addEventListener("change", range_value_updated, false);
+        stepElem.addEventListener("input", range_value_updated, false);
+
+        const valueWrapper = document.createElement("span");
+        valueWrapper.appendChild(valueElem);
+        valueWrapper.appendChild(stepElem);
+
+        return wrap_with_label(valueWrapper, definition, prefixId);
+      }
+
+      function create_checkbox_elem(definition, config, prefixId) {
+        const value = get_initial_value(definition, config);
+
+        const checkboxElem = document.createElement("input");
+        checkboxElem.type = "checkbox";
+        checkboxElem.checked = value;
+        
+        config[definition.name] = value;
+        checkboxElem.addEventListener("change", (e) => {
+          const valueUpdate = Boolean(e.target.checked);
+          config[definition.name] = valueUpdate;
+          notify_config_change();
+        });
+
+        return wrap_with_label(checkboxElem, definition, prefixId);
+      }
+
+      function create_color_elem(definition, config, prefixId) {
+        const value = get_initial_value(definition, config);
+
+        const bgrColor = value;
+        const r = (bgrColor & 0x0000ff);
+        const g = (bgrColor & 0x00ff00) >> 8;
+        const b = (bgrColor & 0xff0000) >> 16;
+        const rgbColor = (r << 16) + (g << 8) + b;
+        const color = "#" + rgbColor.toString(16).padStart(6, '0');
+
+        const colorElem = document.createElement("input");
+        colorElem.type = "color";
+        colorElem.value = color;
+
+        config[definition.name] = value;
+        function color_value_updated(e) {
+          const color = e.target.value;
+          const rgbColor = parseInt(color.slice(1), 16);
+          const r = (rgbColor & 0xff0000) >> 16;
+          const g = (rgbColor & 0x00ff00) >> 8;
+          const b = (rgbColor & 0x0000ff);
+          const bgrColor = (b << 16) + (g << 8) + r;
+
+          config[definition.name] = bgrColor;
+          notify_config_change();
+        }
+
+        colorElem.addEventListener("change", color_value_updated, false);
+        colorElem.addEventListener("input", color_value_updated, false);
+        
+        return wrap_with_label(colorElem, definition, prefixId);
+      }
+
+      function create_text_elem(definition, config, prefixId) {
+        const value = get_initial_value(definition, config);
+
+        const textElem = document.createElement("input");
+        textElem.type = "text";
+        textElem.value = value;
+        console.log("text", value)
+        if (definition.max_length && definition.max_length > 0) {
+          textElem.maxLength = definition.max_length;
+        }
+
+        config[definition.name] = value;
+        textElem.addEventListener("input", (e) => {
+          config[definition.name] = e.target.value;
+          notify_config_change();
+        });
+        
+        return wrap_with_label(textElem, definition, prefixId);
+      }
+
+      function create_multiline_text_elem(definition, config, prefixId) {
+        const value = get_initial_value(definition, config);
+
+        const textareaElem = document.createElement("textarea");
+        textareaElem.rows = 5;
+        textareaElem.cols = 50;
+        textareaElem.value = value;
+        if (definition.max_length && definition.max_length > 0) {
+          textareaElem.maxLength = definition.max_length;
+        }
+
+        config[definition.name] = value;
+        textareaElem.addEventListener("input", (e) => {
+          config[definition.name] = e.target.value;
+          notify_config_change();
+        });
+        
+        return wrap_with_label(textareaElem, definition, prefixId);
+      }
+
+      function create_select_elem(definition, config, prefixId) {
+        const value = get_initial_value(definition, config);
+
+        const selectElem = document.createElement("select");
+        selectElem.value = value;
+        
+        const options = definition.options || [];
+        options.forEach(o => {
+          const option = document.createElement("option");
+          option.value = o;
+          option.text = o;
+          option.selected = o == value ? "selected" : "";
+          selectElem.appendChild(option);
+        })
+
+        config[definition.name] = value;
+        selectElem.addEventListener("change", (e) => {
+          e.selected = "selected";
+          config[definition.name] = e.target.value;
+          notify_config_change();
+        });
+        
+        return wrap_with_label(selectElem, definition, prefixId);
+      }
+
+      function create_not_supported_elem(definition, config, prefixId) {
+        const labelElem = document.createElement("label");
+        labelElem.innerHTML = "Not supported in browser";
+
+        config[definition.name] = definition.value;
+        return wrap_with_label(labelElem, definition, prefixId);
+      }
+
+      function notify_config_change() {
+        console.log(wallpaperConfig)
+        localStorage.setItem(wallpaperConfigKey, JSON.stringify(wallpaperConfig));
+
+        wallpaper_update_config(JSON.stringify(wallpaperConfig));
+      }
+    </script>
+    <script async type="text/javascript" src="runner.js"></script>
+  </body>
+</html>
