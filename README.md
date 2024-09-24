@@ -1,7 +1,7 @@
 # wasm-bridge
 Include Javascript libraries in your GameMaker WebAssembly games!
 
-In my ongoing quest to try and use the GX.Games/Web Assembly target in GameMaker, I wanted Javascript extensions to fully replace HTML5. And since we don't have that access yet, I DIY'd it. 
+In my ongoing quest to try and use the GX.Games/Web Assembly target in GameMaker in place of the HTML5 target, I wanted Javascript extensions. And since we don't have that access yet, I DIY'd it. 
 
 ## Dependencies
 - Requires Node.JS v20 on system PATH (other versions may work)
