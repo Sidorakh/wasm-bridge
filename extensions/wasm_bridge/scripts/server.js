@@ -16,14 +16,16 @@ const runner_html = fs.readFileSync(runner_path,'utf8');
 const inject_js = fs.readFileSync(path.join(__dirname,'ext-setup.js'),'utf8');
 
 const $ = cheerio.load(runner_html);
-const files = fs.readdirSync(path.join(__dirname,'libraries'));
-
+const files = fs.readdirSync(path.join(process.env.YYMACROS_project_dir,'libraries'));
+if (!fs.existsSync(path.join(process.env.YYMACROS_project_dir,'libraries'))) {
+    fs.mkdirSync(path.join(process.env.YYMACROS_project_dir,'libraries'));
+}
 fs.mkdirSync(path.join(process.env.YYoutputFolder,'runner','libraries'));
 
 for (const file of files) {
     if (file.endsWith('.js')) {
         $('head').prepend(`\n<!-- ${file} -->\n<script src="./libraries/${file}"></script>\n`);
-        fs.copyFileSync(path.join(__dirname,'libraries',file),path.join(process.env.YYoutputFolder,'runner','libraries',file));
+        fs.copyFileSync(path.join(process.env.YYMACROS_project_dir,'libraries',file),path.join(process.env.YYoutputFolder,'runner','libraries',file));
         
     }
 }

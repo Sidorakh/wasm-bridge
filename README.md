@@ -14,7 +14,7 @@ However, you can export a zip on your local PC by uncommenting line 62 in the `s
 This extension overrides `window.prompt` in the HTML pages that the GX.Games target generates, and bundles specific JavaScript files with the game. 
 
 ## Creating an extension for use with this
-Create Javascript files that register functions on the `window.wasmgml` object and place them in the `extensions/wasm_bridge/scripts/libraries` folder. If you're using a build system such as webpack or a transpiler like TypeScript, just ensure the functions are created on the `window.wasmgml` object and drop the generated JS file in the correct location. 
+Create Javascript files that register functions on the `window.wasmgml` object and place them in the `libraries` folder in the projects main directory (this will be created for you on first run). If you're using a build system such as webpack or a transpiler like TypeScript, just ensure the functions are created on the `window.wasmgml` object and drop the generated JS file in the correct location. 
 
 For example, a library designed to use the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API)
 
