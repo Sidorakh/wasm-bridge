@@ -5,6 +5,8 @@ window.prompt = (q,d)=>{
         const {fn,params} = JSON.parse(d);
         if (window.wasmgml[fn]) {
             return JSON.stringify({data: window.wasmgml[fn](params)});
+        } else {
+            return JSON.stringify({data: ""});
         }
     } else {
         return original_prompt(q,d);
