@@ -5,7 +5,17 @@ const JSZip = require('jszip'); // for modifying the output zip file
 // assume it's enabled - this script *is* running after all
 
 //fs.writeFileSync(path.join(__dirname,'../','../','../','.env'),Object.entries(process.env).map(e=>`${e[0]}=${e[1]}`).join('\n'))
+let is_post_package = false;
+for (const arg of process.argv.slice(2)) {
+    if (arg.includes('postpackage')) {
+        console.log('we are IN THE POST PACKAGE STEP BOIIIIIII WOOOO!!');
+        console.log(`Target File: ${process.env.YYtargetFile}`);
+        is_post_package = true;
+        
+        fs.copyFileSync(process.env.YYtargetFile, path.join(__dirname,'game.zip'));
+    }
 
+}
 
 let runner_path = path.join(process.env.YYoutputFolder,'runner','runner.html');
 if (!fs.existsSync(runner_path)) {
@@ -33,25 +43,16 @@ for (const file of files) {
 $('head').prepend(`\n<script>\n${inject_js}\n</script>`);
 
 fs.writeFileSync(runner_path,$.html());
-let is_post_package = false;
-for (const arg of process.argv.slice(2)) {
-    if (arg.includes('postpackage')) {
-        console.log('we are IN THE POST PACKAGE STEP BOIIIIIII WOOOO!!');
-        console.log(`Target File: ${process.env.YYtargetFile}`);
-        is_post_package = true;
-        
-        fs.copyFileSync(process.env.YYtargetFile, path.join(__dirname,'game.zip'));
-    }
 
-}
 
 if (is_post_package) {
     (async()=>{
+        console.log(`Writing to ${process.env.YYtargetFile}`);
         const data = fs.readFileSync(process.env.YYtargetFile);
         const zip = await JSZip.loadAsync(data);
         for (const file of files) {
             if (file.endsWith('.js')) {
-                const js = fs.readFileSync(path.join(__dirname,'libraries',file));
+                const js = fs.readFileSync(path.join(process.env.YYMACROS_project_dir,'libraries',file));
                 zip.file(`libraries/${file}`,js);
             }
         }
