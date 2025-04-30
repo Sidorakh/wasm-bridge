@@ -7,8 +7,9 @@ In my ongoing quest to try and use the GX.Games/Web Assembly target in GameMaker
 - Requires Node.JS v20 on system PATH (other versions may work)
 
 ## Limitations
-This does not work when expoorting directly to GX.Games.
+This does not work when exporting directly to GX.Games.
 However, you can export a zip on your local PC by uncommenting line 62 in the `server.js` file in the wasm-bridge scripts folder - this line copies any game builds to the curent directory. When WASM zip exports are opened up officially in GameMaker, I expect those to work right out of the box. 
+
 
 ## How does it work?
 This extension overrides `window.prompt` in the HTML pages that the GX.Games target generates, and bundles specific JavaScript files with the game. 
