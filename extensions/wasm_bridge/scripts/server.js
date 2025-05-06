@@ -4,7 +4,7 @@ const fs = require('fs');
 const JSZip = require('jszip'); // for modifying the output zip file
 // assume it's enabled - this script *is* running after all
 
-//fs.writeFileSync(path.join(__dirname,'../','../','../','.env'),Object.entries(process.env).map(e=>`${e[0]}=${e[1]}`).join('\n'))
+fs.writeFileSync(path.join(__dirname,'../','../','../','.env'),Object.entries(process.env).map(e=>`${e[0]}=${e[1]}`).join('\n'))
 let is_post_package = false;
 for (const arg of process.argv.slice(2)) {
     if (arg.includes('postpackage')) {
@@ -16,10 +16,19 @@ for (const arg of process.argv.slice(2)) {
     }
 
 }
+// YYTARGET_runtime
 
 let runner_path = path.join(process.env.YYoutputFolder,'runner','runner.html');
-if (!fs.existsSync(runner_path)) {
-    runner_path = path.join(process.env.YYoutputFolder,'runner','index.html');
+
+if (process.env.YYTARGET_runtime == 'YYC') { // GMS2 YYC
+    const runner_json = fs.readFileSync(path.join(process.env.YYoutputFolder,'runner','runner.json'),'utf8');
+    const json = JSON.parse(runner_json);
+    const fname = json.mainJS.replace('.js','.html');
+    runner_path = path.join(process.env.YYoutputFolder,'runner',fname);
+} else {    // GMS2 VM
+    if (!fs.existsSync(runner_path)) {
+        runner_path = path.join(process.env.YYoutputFolder,'runner','index.html');
+    }
 }
 const runner_html = fs.readFileSync(runner_path,'utf8');
 
