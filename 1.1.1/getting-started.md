@@ -20,4 +20,4 @@ GameMaker's Web Assembly (GX.Games) export is really good, it has better perform
 
 ## Exporting
 
-To export a game with included libraries, you need to entire you click `Export as ZIP` when exporting your GameMaker game on the WASM target. 
+To export a game with included libraries, you need to ensure you click `Export as ZIP` when exporting your GameMaker game on the WASM target. 

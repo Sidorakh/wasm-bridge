@@ -26,7 +26,7 @@
       namespaces: [
         {
           id: 'version',
-          values: [config.latest_version, ...config.other_versions],
+          values: [config.latest_version,...config.other_versions.filter(v=>v!=config.latest_version)],
           optional: true,
           default: config.latest_version,
           selector: '#version-selector',
@@ -54,7 +54,7 @@
       // quick hack for laziness in future lets go
       footer: {
           pre: '<br><hr>',
-          copy: '<span>' + config.name + ' &copy; ' + new Date().getFullYear() + '</span>',
+          copy: '<span> &copy; ' + new Date().getFullYear() + '</span>',
           auth:
               'by <a href="https://sidorakh.net/" target="_blank">Andrew Rutherford</a>' +
               '<br>Docs created using <a href="https://github.com/docsifyjs/docsify/" target="_blank">Docsify</a>',
@@ -80,13 +80,13 @@
             const version_selector = Docsify.dom.find('#version-selector');
 
             const version_selections = [];
-            version_selections.push({text: `v${config.latest_version}`, value: config.latest_version, is_default: true});
+            //version_selections.push({text: `v${config.latest_version}`, value: config.latest_version, is_default: true});
 
             for (const version of config.other_versions) {
               version_selections.push({
                 text: `v${version}`,
                 value: version,
-                is_default: false, 
+                is_default: version == config.latest_version, 
               });
             }
             
