@@ -57,3 +57,8 @@ Temporary Items
 # GameMaker temporary files
 *.resource_order
 *.old
+
+
+# Misc. (env variables and GMRT Build folder)
+.env
+Build/
