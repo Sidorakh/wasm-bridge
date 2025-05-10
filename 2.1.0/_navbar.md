@@ -1,3 +1,3 @@
-- [**Download the latest release**](https://github.com/Sidorakh/wasmm-bridge/releases)
+- [**Download the latest release**](https://github.com/Sidorakh/wasm-bridge/releases)
 - [**Report an issue**](https://github.com/Sidorakh/wasm-bridge/issues)
 - [**Support me**](https://paypal.me/sidorakh)
