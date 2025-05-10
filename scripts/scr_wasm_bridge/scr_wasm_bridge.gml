@@ -58,4 +58,12 @@ function wasm_bridge_init() {
     var str = $"wasmbridge_init|{platform}";
     show_debug_message(str);
 }
+
+function wasm_bridge_encode_buffer(buffer) {
+    return {
+        address: buffer_get_address(buffer),
+        size: buffer_get_size(buffer),
+    }
+}
+
 wasm_bridge_init();

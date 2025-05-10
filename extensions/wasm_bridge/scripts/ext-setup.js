@@ -15,9 +15,49 @@ window.prompt = (q,d)=>{
     }
 }
 */
+/**
+ * @typedef {Object} BufferPointer
+ * @property {string} address
+ * @property {number} size
+ */
 
-
-
+window.gmbuffer = {
+    type: '',
+    get(/** @type {BufferPointer} */ buffer) {
+        const address = parseInt(buffer.address,16);
+        const size = buffer.size;
+        if (window.gmbuffer.type == 'gms2_vm') {
+            const view = new Uint8Array(mb.buffer);
+            return view.slice(address,address+size).buffer;
+        }
+        if (window.gmbuffer.type == 'gms2_yyc') {
+            const view = new Uint8Array(wasmMemory.buffer);
+            return view.slice(address,address+size).buffer;
+        }
+        if (window.gmbuffer.type == '') {
+            throw new Error(`[WASM Bridge] Tried to read from a buffer before initialising the extension`);
+        }
+        throw new Error(`[WASM Bridge] Invalid GameMaker build type '${window.gmbuffer.type}'`);
+    },
+    set(/** @type {BufferPointer} */ buffer,/** @type {ArrayBufferLike} */ newdata){
+        const address = parseInt(buffer.address,16);
+        if (buffer.size < newdata.size) {
+            throw new Error(`[WASM Bridge] Attempted to write data to outside the target buffer`);
+        }
+        if (window.gmbuffer.type == 'gms2_vm') {
+            const view = new Uint8Array(mb.buffer);
+            view.set(newdata,address);
+        }
+        if (window.gmbuffer.type == 'gms2_yyc') {
+            const view = new Uint8Array(wasmMemory.buffer);
+            view.set(newdata,address);
+        }
+        if (window.gmbuffer.type == '') {
+            throw new Error(`[WASM Bridge] Tried to write to a buffer before initialising the extension`)
+        }
+        throw new Error(`[WASM Bridge] Invalid GameMaker build type '${window.gmbuffer.type}'`);
+    },
+};
 window.wasmgml = window.wasmgml || {};
 (function(){
     const lib_prefix = `wasmbridge_dataio|`;
@@ -25,13 +65,12 @@ window.wasmgml = window.wasmgml || {};
     const delimiter = '|';
     const original_console_log = console.log;
 
-    /** @type {'gms2_vm','gms2_yyc','gmrt_vm','gmrt'} */
+    /** @type {'gms2_vm'|'gms2_yyc'|'gmrt_vm'|'gmrt'} */
     let build_type = 'gms2_vm';     // build type - gms2_vm, gms2_yyc, gmrt_vm, gmrt - each may require different handling
 
     // build textencoder and textdecoder for input processing
     const encoder = new TextEncoder();
     const decoder = new TextDecoder('utf8');
-    
 
     const gml_extract_buffer = (/** @type {number} */ address,/** @type {number} */ length)=>{
         if (build_type == 'gms2_vm') {
