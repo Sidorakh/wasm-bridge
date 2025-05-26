@@ -33,8 +33,8 @@ function run_js_function(fn,params={},output_size = -1) {
     show_debug_message(str);
     buffer_seek(input,buffer_seek_start,0);
     var out = buffer_read(output,buffer_string);
-    var json = json_parse(out);
-    return json.result;
+	var json = json_parse(out);
+	return json[$ "result"];
 }
 
 
