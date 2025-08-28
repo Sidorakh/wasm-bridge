@@ -10,11 +10,16 @@ function run_js_function(fn, params={}) {
 
 /// @description Run a bundled JavaScript function
 /// @param {string} fn Function name as desifned in JS
-/// @param {struct} params Struct Struct holding params
+/// @param {any} params Parameter/s for the function
 /// @param {real} output_size Sets size of (static) output buffer
 /// @returns {any}
 /// 
-function run_js_function(fn,params={},output_size = -1) {
+function run_js_function(fn,params=undefined,output_size = -1) {
+
+    if (!is_wasm_runner()) {
+        throw "Can only run on Opera GX"
+    }
+    
     static input = buffer_create(1024,buffer_grow,1);
     static output = buffer_create(1024,buffer_grow,1);
     
@@ -30,13 +35,20 @@ function run_js_function(fn,params={},output_size = -1) {
     var output_address = buffer_get_address(output);
     buffer_write(input,buffer_text,json_stringify(params));
     var str = $"wasmbridge_dataio|{fn}|{input_address}|{output_address}|{buffer_tell(input)}|{buffer_get_size(output)}";
-    show_debug_message(str);
+    
+    wasm_bridge_data_out(str);
     buffer_seek(input,buffer_seek_start,0);
     var out = buffer_read(output,buffer_string);
 	var json = json_parse(out);
 	return json[$ "result"];
 }
 
+function is_wasm_runner() {
+    if (os_type != os_operagx) {
+        return false;
+    }
+    return true;
+}
 
 function wasm_bridge_init() {
     // GM_runtime_type = gms2 / gmrt
@@ -56,7 +68,7 @@ function wasm_bridge_init() {
         }
     }
     var str = $"wasmbridge_init|{platform}";
-    show_debug_message(str);
+    wasm_bridge_data_out(str);
 }
 
 function wasm_bridge_encode_buffer(buffer) {
@@ -64,6 +76,13 @@ function wasm_bridge_encode_buffer(buffer) {
         address: buffer_get_address(buffer),
         size: buffer_get_size(buffer),
     }
+}
+
+/// @description Pass data out to JS
+/// @argument {string} data Data to send
+function wasm_bridge_data_out(data) {
+    //show_debug_message(data);
+    window_set_caption(data);
 }
 
 wasm_bridge_init();

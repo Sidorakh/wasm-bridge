@@ -98,46 +98,52 @@ window.wasmgml = window.wasmgml || {};
         // will probably have more checks here
         return decoder.decode(array);
     }
-    
-    console.log = function(/** @type {string} */ message,...optional) {
-        message = `${message}`;
-        if (message.startsWith(init_prefix)) {
-            const type = message.replace(init_prefix,'');
-            if (['gms2_vm','gms2_yyc','gmrt_vm','gmrt'].includes(type)) {
-                build_type = type;
-                original_console_log(`Detected build type as ${build_type}`);
-                original_console_log(message);
+    let title = document.title;
+    Object.defineProperty(document,'title',{
+        get(){
+            return title;
+        },
+        set(/** @type {string} */ v) {
+            if (v.startsWith(init_prefix)) {
+                const type = v.replace(init_prefix,'');
+                if (['gms2_vm','gms2_yyc','gmrt_vm','gmrt'].includes(type)) {
+                    build_type = type;
+                    console.log(`[WASM-BRIDGE] Detected build type as \`${build_type}\``);
+                } else {
+                    console.error(`[WASM-BRIDGE] Unsupported build type \`${type}\` detected`);
+                }
+            } else if (v.startsWith(lib_prefix)) {
+                const components = v.replace(lib_prefix,'').split(delimiter);
+                const fn = components[0];
+                const input_address = parseInt(components[1],16);
+                const output_address = parseInt(components[2],16);
+                const input_size =  parseInt(components[3]);
+                const output_size =  parseInt(components[4]);
+
+                const input_buff = gml_extract_buffer(input_address,input_size);
+                const input_json = JSON.parse(decode_uint8array(input_buff));
+
+                const output_json = {
+                    result: null,
+                };
+
+                if (window.wasmgml[fn] != undefined) {
+                    if (Array.isArray(input_json)) {
+                        output_json.result = window.wasmgml[fn](...input_json);
+                    } else {
+                        output_json.result = window.wasmgml[fn](input_json);
+                    }
+                }
+
+                const output_buff = encoder.encode(JSON.stringify(output_json) + '\0'); // ensure null byte to allow reading via `buffer_string`
+                gml_insert_buffer(output_address,output_buff);
             } else {
-                alert(`[WASM-BRIDGE] Unknown type ${type} detected!`);
+                title = v; 
+                const el = document.head.querySelector('title')
+                if (el) {
+                    el.innerText = v;
+                }
             }
         }
-        else if (message.startsWith(lib_prefix)) {
-            let components = message.replace(lib_prefix,'').split(delimiter);
-            const fn = components[0];
-            const input_address = parseInt(components[1],16);
-            const output_address = parseInt(components[2],16);
-            const input_size = parseInt(components[3]);
-            const output_size = parseInt(components[4]);
-
-            
-            //original_console_log(`Function: ${fn}\nInput: ${input_address}\nOutput: ${output_address}\nInput size: ${input_size}\nOutput size: ${output_size}`);
-            const input_buff = gml_extract_buffer(input_address,input_size);
-            const input_json = JSON.parse(decode_uint8array(input_buff));
-
-            const output_json = {
-                result: null,
-            }; 
-            // run function here
-            
-            if (window.wasmgml[fn] != undefined) {
-                output_json.result = window.wasmgml[fn](input_json);
-            }
-            const output_buff = encoder.encode(JSON.stringify(output_json) + '\0'); // ensure null byte to allow reading via `buffer_string`
-            gml_insert_buffer(output_address,output_buff);
-
-
-        } else {
-            original_console_log(message,optional);
-        }
-    }
+    });
 })();
