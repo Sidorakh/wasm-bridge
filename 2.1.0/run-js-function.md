@@ -28,6 +28,6 @@ IMPORTANT: The `input` and `output` structs are both Grow buffers and are 1024 b
 }
 ```
 
-The data contained within the `result` key is passed back directly to your code, so you do not need to deal with this interm,intermediary struct at all.
+The data contained within the `result` key is passed back directly to your code, so you do not need to deal with this intermediary struct at all.
 
 

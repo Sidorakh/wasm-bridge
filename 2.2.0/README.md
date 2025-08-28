@@ -25,7 +25,7 @@
 
 # Limitations
 
-This does not work when exporting directly to GX.Games. I have been able to test this and confirm it works in GMS2 VM and GMS2 YYC, but haven't been able to get it working with GMRT's runtime (though, hopefully this extension won't be needed for that)
+This does not work when exporting directly to GX.Games. I have been able to test this and confirm it works in GMS2 VM and GMS2 YYC, and it appears to work with GMRT's runtime though hopefully it won't be necessary for it for too long. 
 
 
 # Why was WASM Bridge made?

@@ -27,7 +27,7 @@ window.wasmgml.native_share_dialog = async (params) => {
 }
 ```
 
-It first checks to ensure the `navigator.share` function exists, then makes sure that at least one field is present on the `params` object, and then calls `navigator.share()` in a try-catch statement which will catch the error if the share is cancelled or fails for some otehr reason. 
+It first checks to ensure the `navigator.share` function exists, then makes sure that at least one field is present on the `params` object, and then calls `navigator.share()` in a try-catch statement which will catch the error if the share is cancelled or fails for some other reason. 
 
 To run this in GameMaker, it's as simple as running the following code:
 ```gml

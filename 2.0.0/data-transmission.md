@@ -13,7 +13,7 @@ At a basic level, anything that can be serialised into JSON can be sent between 
 | `Struct` | `Object` |
 | `undefined` | `undefined` \| `null` |
 
-By default, JSON is used to transfer data in and out of the GameMaker application, so any types that can serialise in GameMakers JSON immplementation will work as expected, each is outlined in the above table. Types such as [`Handles`](https://manual.gamemaker.io/monthly/en/GameMaker_Language/GML_Overview/Data_Types.htm#:~:text=int64-,Handles,-A%20handle%20contains) and special values such as `NaN` and `Infinity` are all turned into specially formatte strings by GameMakers `json_stringify` function, and as such if unaltered *can* be properly evaluated by `json_parse`, but since they don't have an equivalent in the standard JSON implementation used by JavaScript, it's best to not rely on this behaviour when using this extension. 
+By default, JSON is used to transfer data in and out of the GameMaker application, so any types that can serialise in GameMakers JSON implementation will work as expected, each is outlined in the above table. Types such as [`Handles`](https://manual.gamemaker.io/monthly/en/GameMaker_Language/GML_Overview/Data_Types.htm#:~:text=int64-,Handles,-A%20handle%20contains) and special values such as `NaN` and `Infinity` are all turned into specially formatte strings by GameMakers `json_stringify` function, and as such if unaltered *can* be properly evaluated by `json_parse`, but since they don't have an equivalent in the standard JSON implementation used by JavaScript, it's best to not rely on this behaviour when using this extension. 
 
 ## Advanced: Buffers
 

@@ -1,22 +1,23 @@
 # wasm-bridge
 Include Javascript libraries in your GameMaker WebAssembly games!
 
-In my ongoing quest to try and use the GX.Games/Web Assembly target in GameMaker in place of the HTML5 target, I wanted Javascript extensions. And since we don't have that access yet, I DIY'd it. 
+In my ongoing quest to try and use the GX.Games/Web Assembly target in GameMaker in place of the HTML5 target, I wanted Javascript extensions. And since we don't have that access yet (and likely won't until GMRT), I DIY'd it. 
 
 ## Dependencies
 - Requires Node.JS v20 on system PATH (other versions may work)
 
 ## Limitations
-This does not work when expoorting directly to GX.Games.
+This does not work when exporting directly to GX.Games.
 However, you can export a zip on your local PC by uncommenting line 62 in the `server.js` file in the wasm-bridge scripts folder - this line copies any game builds to the curent directory. When WASM zip exports are opened up officially in GameMaker, I expect those to work right out of the box. 
 
+
 ## How does it work?
-This extension overrides `window.prompt` in the HTML pages that the GX.Games target generates, and bundles specific JavaScript files with the game. 
+This extension overrides `document.title` (formerly `prompt` and then `console.log`) in the HTML page that the GX.Games target generates with a custom getter and setter, and bundles specific JavaScript files with the game. 
 
 ## Creating an extension for use with this
 Create Javascript files that register functions on the `window.wasmgml` object and place them in the `libraries` folder in the projects main directory (this will be created for you on first run). If you're using a build system such as webpack or a transpiler like TypeScript, just ensure the functions are created on the `window.wasmgml` object and drop the generated JS file in the correct location. 
 
-For example, a library designed to use the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API)
+For example, a function designed to expose the [Web Share API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Share_API)
 
 ```js
 /// extensions/wasm_bridge/scripts/libraries/native-share-dialog.js
